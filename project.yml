@@ -84,9 +84,7 @@
     :executable: arm-none-eabi-gcc
     :name: 'GNU ARM Compiler'
     :arguments:
-      - -mcpu=cortex-m4
-      - -mfloat-abi=hard
-      - -mfpu=fpv4-sp-d16
+      - -mcpu=cortex-m23
       - -Wall
       - -fomit-frame-pointer
       - -Os
@@ -109,9 +107,7 @@
   :test_linker:
     :executable: arm-none-eabi-gcc
     :arguments:
-      - -mcpu=cortex-m4
-      - -mfloat-abi=hard
-      - -mfpu=fpv4-sp-d16
+      - -mcpu=cortex-m23
       - -nostartfiles
       - -ffreestanding
       - -gdwarf-3
@@ -149,6 +145,7 @@
     :name: "Qemu test fixture"
     :stderr_redirect: :auto # win inform Ceedling what model of $stderr capture to use
     :arguments:
+      - -cpu cortex-m33
       - -M netduinoplus2
       - -nographic
       - -monitor null
