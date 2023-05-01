@@ -37,30 +37,34 @@ void Default_Handler(void)
 	sh_error();
 }
 
-void HardFault_Handler(void)
+__attribute__((naked)) void HardFault_Handler(void)
 {
-    #if defined(__ARM_ARCH_8M_BASE__) || defined(__ARM_ARCH_6M__)
-    asm volatile("movs   R0, #4\n"
-            "mov    R1, LR\n"
-            "tst    R0, R1\n"
-            "bne    PSP_ACTIVE\n"
-            "mrs    R0, MSP\n"
-            "b      CALL_HANDLER\n"
-            "PSP_ACTIVE:\n"
-            "mrs R0, PSP\n"
-            "CALL_HANDLER:\n"
-            "ldr R2,=fault_handler_c\n"
-            "bx R2\n");
-    #elif defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_8M__)
-	asm volatile("tst lr, #4 \n"
+#if defined(__ARM_ARCH_8M_BASE__) || defined(__ARM_ARCH_6M__)
+	asm volatile(
+        "movs   r0, #4            \n"
+        "mov    r1, lr            \n"
+        "tst    r0, r1            \n"
+        "bne    not_msp           \n"
+        "mrs    r0, msp           \n"
+        "b      fault_handler     \n"
+        "not_msp:                 \n"
+        "mrs r0, psp              \n"
+        "fault_handler:           \n"
+        "ldr r2,=fault_handler_c  \n"
+        "bx r2                    \n"
+    );
+#elif defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_8M__)
+	asm volatile(
+        "tst lr, #4 \n"
 		     "ite eq \n"
 		     "mrseq r0, msp \n"
 		     "mrsne r0, psp \n"
 		     "b fault_handler_c \n"
-             "nop\n");
-    #else
-    #error "Unsupported Architecture"
-    #endif
+		     "nop\n"
+    );
+#else
+#error "Unsupported Architecture"
+#endif
 }
 
 void NMI_Handler(void) ALIAS(Default_Handler);
