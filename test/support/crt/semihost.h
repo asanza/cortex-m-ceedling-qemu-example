@@ -1,7 +1,0 @@
-#ifndef DCB41697_C33E_4D16_B500_3D95DD3ADDBB
-#define DCB41697_C33E_4D16_B500_3D95DD3ADDBB
-
-int sh_end(void);
-int sh_error( void );
-
-#endif /* DCB41697_C33E_4D16_B500_3D95DD3ADDBB */

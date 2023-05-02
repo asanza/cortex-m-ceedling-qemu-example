@@ -5,9 +5,8 @@
  */
 
 #include <stdint.h>
-#include "semihost.h"
-#include "printf.h"
-#include "unity.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 #define WEAK __attribute__((weak))
 #define ALIAS(f) __attribute__((weak, alias(#f)))
@@ -26,6 +25,10 @@ extern unsigned int __data_start__;
 extern unsigned int __data_end__;
 extern unsigned int __etext;
 
+void
+fault_handler_c(unsigned int *stack);
+extern void initialise_monitor_handles(void);
+
 void Default_Handler(void)
 {
 	/*
@@ -34,7 +37,7 @@ void Default_Handler(void)
      */
 	volatile __unused uint32_t vector = *REGADDR(ICSR) & 0xFFU;
 	printf("Default handler called: Vector %d\n", vector);
-	sh_error();
+	exit(-1);
 }
 
 __attribute__((naked)) void HardFault_Handler(void)
@@ -123,7 +126,52 @@ void reset_handler(void)
 	while (it < &__bss_end__) {
 		*it++ = 0;
 	}
-
+    initialise_monitor_handles();
 	main();
-	sh_end();
+	exit(0);
+}
+
+void
+fault_handler_c(unsigned int *stack)
+{
+    char buf[100];
+    volatile uint32_t *cfsr  = (volatile uint32_t *)0xE000ED28;
+    volatile uint16_t *ufsr  = (volatile uint16_t *)0xE000ED2A;
+    volatile uint8_t *bfsr  = (volatile uint8_t *)0xE000ED29;
+    volatile uint8_t *mmfsr = (volatile uint8_t *)0xE000ED28;
+    volatile uint8_t *bfar  = (volatile uint8_t *)0xE000ED38;
+
+    printf("================================================\n\n");
+    printf("PANIC!!! Fault Handler Called...\n");
+    printf("\n");
+    printf("Stacktrace: \n");
+    printf("R0   : 0x%08X\n", stack[0]);
+    printf("R1   : 0x%08X\n", stack[1]);
+    printf("R2   : 0x%08X\n", stack[2]);
+    printf("R3   : 0x%08X\n", stack[3]);
+    printf("R12  : 0x%08X\n", stack[4]);
+    printf("LR   : 0x%08X\n", stack[5]);
+    printf("PC   : 0x%08X\n", stack[6]);
+    printf("XPSR : 0x%08X\n", stack[7]);
+    printf("CFSR : 0x%08X\n", *cfsr);
+    if (*bfsr & (1 << 7)) {
+        printf("BFAR : 0x%08X\n", *bfar);
+    }
+    printf("\n");
+    printf("UFSR DIVBYZERO    : %d\n", (*ufsr & (1 << 9)) != 0);
+    printf("UFSR UNALIGNED    : %d\n", (*ufsr & (1 << 8)) != 0);
+    printf("UFSR NOCP         : %d\n", (*ufsr & (1 << 3)) != 0);
+    printf("UFSR INVPC        : %d\n", (*ufsr & (1 << 2)) != 0);
+    printf("UFSR INVSTATE     : %d\n", (*ufsr & (1 << 1)) != 0);
+    printf("UFSR UNDEFINSTR   : %d\n", (*ufsr & (1 << 0)) != 0);
+    printf("BFSR BFARVALID    : %d\n", (*bfsr & (1 << 7)) != 0);
+    printf("BFSR LSPERR       : %d\n", (*bfsr & (1 << 5)) != 0);
+    printf("BFSR STKERR       : %d\n", (*bfsr & (1 << 4)) != 0);
+    printf("BFSR UNSTKERR     : %d\n", (*bfsr & (1 << 3)) != 0);
+    printf("BFSR IMPRECISERR  : %d\n", (*bfsr & (1 << 2)) != 0);
+    printf("BFSR PRECISERR    : %d\n", (*bfsr & (1 << 1)) != 0);
+    printf("BFSR IBUSERR      : %d\n", (*bfsr & (1 << 0)) != 0);
+    printf("================================================\n");
+    sprintf(buf, "Hard Fault Called at PC Address 0x%08x!", stack[6]);
+    exit(-1);
 }
