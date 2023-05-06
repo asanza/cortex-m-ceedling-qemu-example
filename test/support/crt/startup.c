@@ -188,8 +188,8 @@ fault_handler_c(unsigned int *stack)
         printf("BFAR : 0x%08X\n", *bfar);
     }
     printf("\n");
-    decode_ufsr(0xFFFF);
-    decode_bfsr(0XFF);
+    decode_ufsr(*ufsr);
+    decode_bfsr(*bfsr);
     printf("\n================================================\n");
     exit(0);
 }
