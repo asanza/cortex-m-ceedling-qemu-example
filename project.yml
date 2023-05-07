@@ -129,8 +129,8 @@
       - -I$: COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
       - test/support/crt_ra4m2/startup.c
       - --specs=rdimon.specs
+      - --specs=nano.specs
       - -lrdimon
-      - -lc
       - ${1}
       - -o ${2}
 
