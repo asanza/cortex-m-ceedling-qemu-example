@@ -117,6 +117,9 @@ reset_handler(void)
         *it++ = 0;
     }
     initialise_monitor_handles();
+
+    asm volatile("cpsie i");
+
     main();
     exit(0);
 }
@@ -272,14 +275,33 @@ HardFault_Handler(void)
 #endif
 }
 
+static const char* vector_name( uint32_t vector ) {
+    switch(vector) {
+        case 1: return "Reset";
+        case 2: return "NMI";
+        case 3: return "Hard Fault";
+        case 4: return "MemManage Fault";
+        case 5: return "Bus Fault";
+        case 6: return "Usage Fault";
+        case 7: return "Secure Fault";
+        case 11: return "SVC";
+        case 13: return "Debug Mon";
+        case 14: return "Pend SV";
+        case 15: return "SysTick";
+        default: return "Unknown";
+    }
+}
+
 void
 Default_Handler(void)
 {
+    char buf[100];
     /*
      * If we are here, chances are that we triggered an unhandled exception
      * handler. Read the active interrupt number bellow.
      */
     volatile __unused uint32_t vector = *REGADDR(ICSR) & 0xFFU;
-    printf("Default handler called: Vector %d\n", vector);
-    exit(-1);
+    sprintf(buf, "Default Handler called for vector: %d (%s)", vector, vector_name(vector));
+    UNITY_TEST_FAIL(0, buf);
+    exit(0);
 }
