@@ -1,6 +1,6 @@
-#ifndef SAMPLE_H
-#define SAMPLE_H
+#ifndef D131A46B_D4A1_45CA_9506_E868D47C831B
+#define D131A46B_D4A1_45CA_9506_E868D47C831B
 
 int sum(int a, int b);
 
-#endif // SAMPLE_H
+#endif /* D131A46B_D4A1_45CA_9506_E868D47C831B */

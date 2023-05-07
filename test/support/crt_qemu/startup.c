@@ -272,7 +272,7 @@ HardFault_Handler(void)
                  "mrs r0, psp              \n"
                  "fault_handler:           \n"
                  "b fault_handler_c        \n");
-#elif defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_8M__)
+#elif defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_8M__) || defined(__ARM_ARCH_7EM__)
     asm volatile("tst lr, #4 \n"
                  "ite eq \n"
                  "mrseq r0, msp \n"
@@ -313,6 +313,11 @@ Default_Handler(void)
     sprintf(buf, "Default Handler called for vector: %d (%s)", vector, vector_name(vector));
     UNITY_TEST_FAIL(0, buf);
 }
+
+uint32_t get_systick( void ) {
+    return 0;
+}
+
 
 #ifdef GCOV_ENABLED
 

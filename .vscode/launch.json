@@ -5,15 +5,36 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "QEMU Unit Test Debug",
+            "name": "RA4M1",
             "type": "cortex-debug",
-            "cwd": "${workspaceFolder}/build/gcov/out",
+            "cwd": "${workspaceFolder}/example_ra4m1/build/test/out",
+            "request": "launch",
+            "executable": "${fileBasenameNoExtension}.out",
+            "servertype": "jlink",
+            "device": "R7FA4M1AB",
+            "runToEntryPoint": "reset_handler",
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchCommands": [
+                "monitor semihosting enable",
+                "monitor semihosting thumbswi 0xab",
+                "monitor semihosting IOClient 2",        
+            ]
+        },
+        {
+            "name": "QEMU",
+            "type": "cortex-debug",
+            "cwd": "${workspaceFolder}/example_qemu/build/test/out",
             "request": "launch",
             "executable": "${fileBasenameNoExtension}.out",
             "servertype": "qemu",
-            "cpu": "cortex-m4",
             "machine": "netduinoplus2",
-            "runToEntryPoint": "main"
+            "cpu": "cortex-m4",
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchCommands": [
+                "monitor semihosting enable",
+                "monitor semihosting thumbswi 0xab",
+                "monitor semihosting IOClient 2",        
+            ]
         }
     ]
 }
