@@ -19,6 +19,12 @@ import time
 
 jlink_gdbserver = 'JLinkGDBServer'
 arm_none_eabi_gdb = 'arm-none-eabi-gdb'
+arm_none_eabi_addr2line = "arm-none-eabi-addr2line"
+
+def addr2line(file, addr):
+    client = subprocess.Popen([arm_none_eabi_addr2line, '-e',  file, addr], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    buf = client.stdout.read()
+    return buf.decode('ascii', 'ignore').replace('\n', '')
 
 
 def startGdbClient(name, gdbinit, executable, port):
@@ -65,7 +71,15 @@ def startGdbClient(name, gdbinit, executable, port):
     line = line.replace('`', '')
     if re.search(r'^.*(Semihosting|Semi-hosting|SYSRESETREQ).*$', line):
       continue
-    print(line)
+    print(line, end='')
+
+    if re.search(r'LR   :', line):
+        print(" ({})".format(addr2line(executable, line.split(':')[1])), end='')
+
+    if re.search(r'PC   :', line):
+        print(" ({})".format(addr2line(executable, line.split(':')[1])), end='')
+
+    print('')
     if re.search(r'^OK', line):
       return 0
   return 0
