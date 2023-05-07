@@ -121,11 +121,11 @@
       - -Wl,--whole-archive
       - -Wl,--no-whole-archive
       - -Wl,--Map=${2}.map
-      - -T test/support/crt/linker_script.ld
+      - -T test/support/crt_ra4m2/linker_script.ld
       - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
       - -I$: COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE
       - -I$: COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
-      - test/support/crt/startup.c
+      - test/support/crt_ra4m2/startup.c
       - --specs=rdimon.specs
       - -lrdimon
       - -lc

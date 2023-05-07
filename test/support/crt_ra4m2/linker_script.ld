@@ -5,13 +5,13 @@
  */
 
 /* 
- * Simple linker script to be used with QEMU netduino2 board
+ * Simple linker script to be used with EK-RA4M2 renesas development board
  */
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 1M
-  RAM (rwx) : ORIGIN =  0x20000000, LENGTH = 192K
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 512K
+  RAM (rwx) : ORIGIN =  0x20000000, LENGTH = 128K
 }
 
 HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0x2000;
@@ -23,9 +23,14 @@ SECTIONS
 {
     .text :
     {
+        __isr_vector = .;
         KEEP(*(.isr_vector))
 
-        . += 400;
+        . = ALIGN(4);
+        . = __isr_vector + 400;
+        /* renesas flash configuration registers */
+        KEEP(*(.rom_registers))
+        . = __isr_vector + 500;
 
         *(.text*)
 

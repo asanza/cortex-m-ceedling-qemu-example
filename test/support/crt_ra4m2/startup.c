@@ -305,3 +305,5 @@ Default_Handler(void)
     UNITY_TEST_FAIL(0, buf);
     exit(0);
 }
+
+__attribute((used, section(".rom_registers"))) uint8_t config[100] = {0xFF};
