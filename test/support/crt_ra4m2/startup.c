@@ -18,6 +18,10 @@
 #define CCR   0xE000ED14
 #define HFSR  0xE000ED2C
 
+#define SYST_CSR     (0xE000E010)  // SysTick Control and Status Register
+#define SYST_RVR     (0xE000E014)  // SysTick Reload Value Register
+#define SYST_CVR     (0xE000E018)  // SysTick Current Value Register
+
 #define REGADDR(x) ((unsigned int *)x)
 #define BIT_SET(x, bit) ((x) & (1 << (bit)))
 #define PRINT_IF_SET(x, bit, message)                                          \
@@ -42,8 +46,11 @@ fault_handler_c(unsigned int *stack);
 extern void
 initialise_monitor_handles(void);
 
+static uint32_t g_systick_interrupt_count;
+
 __attribute__((naked)) void HardFault_Handler(void);
 void Default_Handler( void );
+void SysTick_Handler( void );
 
 void
 NMI_Handler(void) ALIAS(Default_Handler);
@@ -61,8 +68,6 @@ void
 DebugMon_Handler(void) ALIAS(Default_Handler);
 void
 PendSV_Handler(void) ALIAS(Default_Handler);
-void
-SysTick_Handler(void) ALIAS(Default_Handler);
 
 void
 reset_handler(void);
@@ -116,6 +121,11 @@ reset_handler(void)
     while (it < &__bss_end__) {
         *it++ = 0;
     }
+
+    *REGADDR(SYST_CSR) = 0x00000007UL;
+    *REGADDR(SYST_RVR) = 0x00FFFFFFUL;
+    *REGADDR(SYST_CVR) = 0;
+
     initialise_monitor_handles();
 
     asm volatile("cpsie i");
@@ -304,6 +314,16 @@ Default_Handler(void)
     sprintf(buf, "Default Handler called for vector: %d (%s)", vector, vector_name(vector));
     UNITY_TEST_FAIL(0, buf);
     exit(0);
+}
+
+void
+SysTick_Handler( void ) {
+    g_systick_interrupt_count++;
+}
+
+uint32_t get_systick( void ) {
+    uint32_t ticks = (0x00FFFFFFUL - *REGADDR(SYST_CVR)) | (g_systick_interrupt_count << 8);
+    return ticks;
 }
 
 __attribute((used, section(".rom_registers"))) uint8_t config[100] = {0xFF};

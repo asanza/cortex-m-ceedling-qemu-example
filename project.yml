@@ -68,6 +68,8 @@
 :unity:
   :defines:
     - UNITY_OUTPUT_COLOR
+    - UNITY_INCLUDE_CONFIG_H
+    - UNITY_INCLUDE_EXEC_TIME
 
 # Add -gcov to the plugins list to make sure of the gcov plugin
 # You will need to have gcov and gcovr both installed to make it work.

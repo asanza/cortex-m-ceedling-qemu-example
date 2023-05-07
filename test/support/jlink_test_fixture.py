@@ -29,60 +29,58 @@ def addr2line(file, addr):
 
 def startGdbClient(name, gdbinit, executable, port):
 
-  gdbargs = [arm_none_eabi_gdb,
-    '-q', '-batch',
-    '-ex', 'target remote localhost:' + port,
-    '-ex', 'mon reset 0',
-    '-ex', 'monitor semihosting enable',
-    '-ex', 'monitor semihosting thumbswi 0xab',
-    '-ex', 'monitor semihosting IOClient 2',
-    '-ex', 'monitor semihosting breakonerror 1',
-    '-ex', 'set mem inaccessible-by-default off',
-    '-ex', 'load',
-    '-ex', 'continue',
-    '-ex', 'quit',
-    executable
-    ]
+    gdbargs = [arm_none_eabi_gdb,
+        '-q', '-batch',
+        '-ex', 'target remote localhost:' + port,
+        '-ex', 'mon reset 0',
+        '-ex', 'monitor semihosting enable',
+        '-ex', 'monitor semihosting thumbswi 0xab',
+        '-ex', 'monitor semihosting IOClient 2',
+        '-ex', 'load',
+        '-ex', 'continue',
+        '-ex', 'quit',
+        executable
+        ]
 
-  if gdbinit != None:
-    gdbargs.append('-x')
-    gdbargs.append(gdbinit)
+    if gdbinit != None:
+        gdbargs.append('-x')
+        gdbargs.append(gdbinit)
 
-  try:
-    gdbClient = subprocess.Popen(gdbargs, stdout=fnull, stderr=subprocess.PIPE)
-  except FileNotFoundError:
-    print('Error: ' + arm_none_eabi_gdb + ' not found')
-    print('Check that arm gnu tools are installed and available in your path\n')
-    print_failure()
-    exit(1)
+    try:
+        gdbClient = subprocess.Popen(gdbargs, stdout=fnull, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        print('Error: ' + arm_none_eabi_gdb + ' not found')
+        print('Check that arm gnu tools are installed and available in your path\n')
+        print_failure()
+        exit(1)
 
-  buf = gdbClient.stderr.read()
-  buf = buf.decode('ascii', 'ignore')
+    buf = gdbClient.stderr.read()
+    buf = buf.decode('ascii', 'ignore')
 
-  if re.search(r'Connection timed out', buf):
-    print("Connection Timed Out")
-    return -1
+    if re.search(r'Connection timed out', buf):
+        print("Connection Timed Out")
+        return -1
 
-  lines = buf.split('\n')
+    lines = buf.split('\n')
 
-  for line in lines:
-    line = line.replace('\x00', '')
-    line = line.replace('\r', '')
-    line = line.replace('`', '')
-    if re.search(r'^.*(Semihosting|Semi-hosting|SYSRESETREQ).*$', line):
-      continue
-    print(line, end='')
+    for line in lines:
+        line = line.replace('\x00', '')
+        line = line.replace('\r', '')
+        line = line.replace('`', '')
+        if re.search(r'^.*(Semihosting|Semi-hosting|SYSRESETREQ).*$', line):
+            continue
+        print(line, end='')
 
-    if re.search(r'LR   :', line):
-        print(" ({})".format(addr2line(executable, line.split(':')[1])), end='')
+        if re.search(r'LR   :', line):
+            print(" ({})".format(addr2line(executable, line.split(':')[1])), end='')
 
-    if re.search(r'PC   :', line):
-        print(" ({})".format(addr2line(executable, line.split(':')[1])), end='')
+        if re.search(r'PC   :', line):
+            print(" ({})".format(addr2line(executable, line.split(':')[1])), end='')
 
-    print('')
-    if re.search(r'^OK', line):
-      return 0
-  return 0
+        print('')
+        if re.search(r'^OK', line):
+            return 0
+    return 0
 
 
 def print_failure():
@@ -100,7 +98,10 @@ def startJlinkGdbServer(name, iface, device, debug_iface, speed, port):
         '-speed',  speed,
         '-noir',
         '-port',   port,
-        '-singlerun'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        '-silent',
+        '-singlerun',
+        '-nogui'
+        ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     except FileNotFoundError:
         print('Error: ' + name + ' not found')
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     t.start()
 
     # Give some time for the gdbserver to fully startup.
-    time.sleep(1)
+    time.sleep(.001)
 
     if not t.is_alive():
         # gdb server died really fast... exit with error
