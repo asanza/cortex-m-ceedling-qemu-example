@@ -142,19 +142,14 @@
       - -lm
 
   :test_fixture:
-    :executable: qemu-system-arm
+    :executable: python
     :name: "Qemu test fixture"
     :stderr_redirect: :auto # win inform Ceedling what model of $stderr capture to use
-    :background_exec: :none
     :arguments:
+      - test/support/qemu-test-fixture.py
       - -cpu cortex-m33
       - -M netduinoplus2
-      - -nographic
-      - -monitor null
-      - -serial null
-      - -semihosting
-      - -kernel ${1}
-      - 2>&1
+      - ${1}
 
 # LIBRARIES
 # These libraries are automatically injected into the build process. Those specified as
