@@ -100,7 +100,8 @@ def startJlinkGdbServer(name, iface, device, debug_iface, speed, port):
         '-port',   port,
         '-silent',
         '-singlerun',
-        '-nogui'
+        '-nogui',
+        '-strict'
         ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     except FileNotFoundError:
