@@ -142,19 +142,15 @@
       - -lm
 
   :test_fixture:
-    :executable: qemu-system-arm
-    :name: "Qemu test fixture"
+    :executable: python
+    :name: "JLink Test Fixture"
     :stderr_redirect: :auto # win inform Ceedling what model of $stderr capture to use
     :background_exec: :none
     :arguments:
-      - -cpu cortex-m33
-      - -M netduinoplus2
-      - -nographic
-      - -monitor null
-      - -serial null
-      - -semihosting
-      - -kernel ${1}
-      - 2>&1
+      - test/support/jlink_test_fixture.py
+      - -device R7FA4M2AB
+      - -gdbpath /opt/arm/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi-gdb
+      - ${1}
 
 # LIBRARIES
 # These libraries are automatically injected into the build process. Those specified as
