@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unity.h>
 
 #define WEAK     __attribute__((weak))
 #define ALIAS(f) __attribute__((weak, alias(#f)))
@@ -14,6 +15,8 @@
 #define CPACR 0xE000ED88
 #define ICSR  0xE000ED04
 #define VTOR  0xE000ED08
+#define CCR   0xE000ED14
+#define HFSR  0xE000ED2C
 
 #define REGADDR(x) ((unsigned int *)x)
 #define BIT_SET(x, bit) ((x) & (1 << (bit)))
@@ -97,6 +100,9 @@ reset_handler(void)
     /* enable the FPU */
     *REGADDR(CPACR) = (0x0FU) << 20;
 
+    /* enable div by zero trap */
+    *REGADDR(CCR) |= ( 1 << 4 );
+
     /* now we initialize data in ram from values saved in flash */
     volatile unsigned int *it = &__data_start__;
     volatile unsigned int *dr = &__etext;
@@ -162,6 +168,48 @@ decode_bfsr(uint8_t bfsr)
     printf(")\n");
 }
 
+static void
+decode_mmfsr(uint8_t mmfsr)
+{
+    printf("MMFSR: 0b");
+    for( int i = 0; i < 8; i++) {
+        BIT_SET(mmfsr, 7 - i) ? printf("1") : printf("0");
+    }
+
+    if (mmfsr == 0) {
+        printf("\n");
+        return;
+    }
+
+    printf(" (");
+    PRINT_IF_SET(mmfsr, 7, "MMARVALID");
+    PRINT_IF_SET(mmfsr, 5, "MLSPERR");
+    PRINT_IF_SET(mmfsr, 4, "STKERR");
+    PRINT_IF_SET(mmfsr, 3, "MSTKERR");
+    PRINT_IF_SET(mmfsr, 1, "DACCVIOL");
+    PRINT_IF_SET(mmfsr, 0, "IACCVIOL");
+    printf(")\n");
+}
+
+static void
+decode_hfsr( void ) {
+    volatile uint32_t* hfsr = (volatile uint32_t*)0xE000ED2C;
+    printf("HFSR : 0b");
+    
+    for( int i = 0; i < 32; i++) {
+        BIT_SET(*hfsr, 31 - i) ? printf("1") : printf("0");
+    }
+    if (*hfsr == 0) {
+        printf("\n");
+        return;
+    }
+
+    printf(" (");
+    PRINT_IF_SET(*hfsr, 31, "DEBUGEVT");
+    PRINT_IF_SET(*hfsr, 30, "FORCED");
+    PRINT_IF_SET(*hfsr, 1, "VECTTBL");
+    printf(" )\n");
+}
 
 void
 fault_handler_c(unsigned int *stack)
@@ -190,7 +238,10 @@ fault_handler_c(unsigned int *stack)
     printf("\n");
     decode_ufsr(*ufsr);
     decode_bfsr(*bfsr);
+    decode_mmfsr(*mmfsr);
+    decode_hfsr();
     printf("\n================================================\n");
+    UNITY_TEST_FAIL(0, "Hard Fault Handler Called. Check output for details.");
     exit(0);
 }
 
