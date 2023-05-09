@@ -170,4 +170,5 @@
     # - stdout_pretty_tests_report
     - stdout_ide_tests_report
     - module_generator
+    - gcov
 ...
