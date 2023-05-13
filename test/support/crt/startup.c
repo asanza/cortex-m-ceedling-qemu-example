@@ -116,6 +116,7 @@ reset_handler(void)
     while (it < &__bss_end__) {
         *it++ = 0;
     }
+    
     initialise_monitor_handles();
 
     asm volatile("cpsie i");

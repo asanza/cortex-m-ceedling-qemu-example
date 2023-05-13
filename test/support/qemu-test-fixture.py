@@ -35,27 +35,29 @@ def runQemu(cpu, machine, executable):
     client = subprocess.Popen(qemu_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     buf = client.stdout.read().decode('ascii', 'ignore')
+    err = client.stderr.read().decode('ascii', 'ignore')
 
-    lines = buf.split('\n')
+    if err != '':
+        print(err)
+        exit(-1)
+
+    lines = buf.split(os.linesep)
     fail_pc = '??:0'
     fail_lr = '??:0'
     for line in lines:
-        if re.search(r'^.*(Semihosting|Semi-hosting|SYSRESETREQ).*$', line):
-            continue
-
         if re.search(r'LR   :', line):
-            fail_lr = addr2line(executable, line.split(':')[1])
+            fail_lr = addr2line(executable, line.split(':')[1]).strip(os.linesep)
             line = line + " ({})".format(fail_lr)
 
         if re.search(r'PC   :', line):
-            fail_pc = addr2line(executable, line.split(':')[1])
+            fail_pc = addr2line(executable, line.split(':')[1]).strip(os.linesep)
             line = line + " ({})".format(fail_pc)
 
         if(re.search(r'Hard Fault Handler Called', line)):
-            if fail_pc != '??:0':
-                line = line.replace(':0:', ':{}:'.format(fail_pc.split(':')[1]))
-            if fail_lr != '??:0':
-                line = line.replace(':0:', ':{}:'.format(fail_lr.split(':')[1]))
+            if not re.search(r'\?\?:', fail_pc):
+                line = line.replace(':0:', ':{}:'.format(re.findall(r'(?<=:)\d+', fail_pc)[-1]))
+            if not re.search(r'\?\?:', fail_lr):
+                line = line.replace(':0:', ':{}:'.format(re.findall(r'(?<=:)\d+', fail_lr)[-1]))
 
         print(line)
 
