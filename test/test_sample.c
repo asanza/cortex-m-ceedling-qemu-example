@@ -13,7 +13,7 @@ void tearDown(void)
 }
 
 void test_success_message( void ) {
-    TEST_PASS_MESSAGE("This test was successful!");
+    TEST_ASSERT_EQUAL(sum(1, 2), 3);
 }
 
 void test_ignore_message( void ) {

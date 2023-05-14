@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <unity.h>
 #include <gcov.h>
+#include <string.h>
 
 #define WEAK     __attribute__((weak))
 #define ALIAS(f) __attribute__((weak, alias(#f)))
@@ -70,8 +71,10 @@ reset_handler(void);
 void
 main(void);
 
+#if GCOV_ENABLED
 static void
 dump_gcov_info (void);
+#endif
 
 __attribute__((
     used, section(".isr_vector"))) void (*const g_interrupt_vector[])(void) = {
@@ -126,6 +129,9 @@ reset_handler(void)
     asm volatile("cpsie i");
 
     main();
+#ifdef GCOV_ENABLED
+    dump_gcov_info();
+#endif
     exit(0);
 }
 
@@ -250,7 +256,6 @@ fault_handler_c(unsigned int *stack)
     decode_hfsr();
     printf("\n================================================\n");
     UNITY_TEST_FAIL(0, "Hard Fault Handler Called. Check output for details.");
-    exit(0);
 }
 
 __attribute__((naked)) void
@@ -266,8 +271,7 @@ HardFault_Handler(void)
                  "is_psp:                  \n"
                  "mrs r0, psp              \n"
                  "fault_handler:           \n"
-                 "ldr r2,=fault_handler_c  \n"
-                 "bx r2                    \n");
+                 "b fault_handler_c        \n");
 #elif defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_8M__)
     asm volatile("tst lr, #4 \n"
                  "ite eq \n"
@@ -308,8 +312,9 @@ Default_Handler(void)
     volatile __unused uint32_t vector = *REGADDR(ICSR) & 0xFFU;
     sprintf(buf, "Default Handler called for vector: %d (%s)", vector, vector_name(vector));
     UNITY_TEST_FAIL(0, buf);
-    exit(0);
 }
+
+#ifdef GCOV_ENABLED
 
 /* The start and end symbols are provided by the linker script.  We use the
    array notation to avoid issues with a potential small-data area.  */
@@ -317,29 +322,23 @@ Default_Handler(void)
 extern const struct gcov_info *const __gcov_info_start[];
 extern const struct gcov_info *const __gcov_info_end[];
 
-/* This function shall produce a reliable in order byte stream to transfer the
-   gcov information from the target to the host system.  */
-
 static void
-dump (const void *d, unsigned n, void *arg)
+filename(const char *f, void *arg)
 {
-  (void)arg;
-  const unsigned char *c = d;
-  unsigned char buf[2];
-
-  for (unsigned i = 0; i < n; ++i)
-    fwrite (encode (c[i], buf), sizeof (buf), 1, stderr);
+    printf("{\"filename\": \"%s\", \"data\": [ ", f);
 }
 
-/* The filename is serialized to a gcfn data stream by the
-   __gcov_filename_to_gcfn() function.  The gcfn data is used by the
-   "merge-stream" subcommand of the "gcov-tool" to figure out the filename
-   associated with the gcov information. */
-
 static void
-filename (const char *f, void *arg)
+dump(const void *d, unsigned n, void *arg)
 {
-  __gcov_filename_to_gcfn (f, dump, arg);
+    const unsigned char *c;
+    unsigned i;
+
+    c = d;
+
+    for (i = 0; i < n; ++i) {
+        printf("%d,", c[i]);
+    }
 }
 
 /* The __gcov_info_to_gcda() function may have to allocate memory under
@@ -368,7 +367,8 @@ dump_gcov_info (void)
   {
     void *arg = NULL;
     __gcov_info_to_gcda (*info, filename, dump, allocate, arg);
-    fputc ('\n', stderr);
+    printf("255]}\n");
     ++info;
   }
 }
+#endif

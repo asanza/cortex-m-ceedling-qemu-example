@@ -11,6 +11,7 @@ import argparse
 import sys
 import re
 import os
+import json
 
 qemu = 'qemu-system-arm'
 arm_none_eabi_addr2line = 'arm-none-eabi-addr2line'
@@ -58,6 +59,13 @@ def runQemu(cpu, machine, executable):
                 line = line.replace(':0:', ':{}:'.format(re.findall(r'(?<=:)\d+', fail_pc)[-1]))
             if not re.search(r'\?\?:', fail_lr):
                 line = line.replace(':0:', ':{}:'.format(re.findall(r'(?<=:)\d+', fail_lr)[-1]))
+
+        if(re.search(r'{"filename":', line)):
+            js = json.loads(line)
+            with open(js['filename'], 'wb') as f:
+                for i in js['data']:
+                    f.write(int(i).to_bytes(1, byteorder='big'))
+            line = ""
 
         print(line)
 

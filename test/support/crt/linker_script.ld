@@ -51,6 +51,13 @@ SECTIONS
         KEEP(*(.eh_frame*))
     } > FLASH
 
+    .gcov_info      :
+    {
+        PROVIDE (__gcov_info_start = .);
+        KEEP (*(.gcov_info))
+        PROVIDE (__gcov_info_end = .);
+    }
+
     .ARM.extab :
     {
         *(.ARM.extab* .gnu.linkonce.armextab.*)

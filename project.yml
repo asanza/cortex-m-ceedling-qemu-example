@@ -120,7 +120,7 @@
       - -Wl,--print-memory-usage
       - -Wl,--whole-archive
       - -Wl,--no-whole-archive
-      - -Wl,--Map=${2}.map
+      - -Wl,--Map=${3}
       - -T test/support/crt/linker_script.ld
       - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
       - -I$: COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE
@@ -129,17 +129,87 @@
       - --specs=rdimon.specs
       - -lrdimon
       - -lc
+      - ${4}
+      - ${1}
+      - -o ${2}
+
+  :gcov_compiler:
+    :executable: arm-none-eabi-gcc
+    :name: 'GNU ARM Compiler'
+    :arguments:
+      - -mcpu=cortex-m23
+      - -Wall
+      - -fomit-frame-pointer
+      - -Os
+      - -gdwarf-3
+      - -ggdb
+      - -c
+      - -mthumb
+      - -fprofile-arcs
+      - -ftest-coverage
+      - -fprofile-info-section
+      - -ffunction-sections
+      - -fno-strict-aliasing
+      - -fdata-sections
+      - -fexpensive-optimizations
+      - -Wfatal-errors
+      - -fmerge-all-constants
+      - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
+      - -I$: COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE
+      - -I$: COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
       - ${1}
       - -o ${2}
 
   :gcov_linker:
-    :executable: gcc
+    :executable: arm-none-eabi-gcc
     :arguments:
+      - -mcpu=cortex-m23
+      - -gdwarf-3
+      - -ggdb
+      - -mthumb
       - -fprofile-arcs
       - -ftest-coverage
+      - -fprofile-info-section
+      - -Wl,--gc-sections
+      - -Wl,--warn-common
+      - -Wl,--check-sections
+      - -Wl,--print-memory-usage
+      - -Wl,--whole-archive
+      - -Wl,--no-whole-archive
+      - -Wl,--Map=${3}
+      - -mlong-calls
+      - -save-temps
+      - -T test/support/crt/linker_script.ld
+      - -DGCOV_ENABLED
+      - -D$: COLLECTION_DEFINES_TEST_AND_VENDOR
+      - -I$: COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE
+      - -I$: COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR
+      - test/support/crt/startup.c
+      - --specs=rdimon.specs
+      - -lrdimon
+      - -lc
+      - ${4}
       - ${1}
       - -o ${2}
-      - -lm
+
+  :gcov_fixture:
+    :executable: python
+    :name: "Qemu test fixture"
+    :stderr_redirect: :auto # win inform Ceedling what model of $stderr capture to use
+    :arguments:
+      - test/support/qemu-test-fixture.py
+      - -cpu cortex-m33
+      - -M netduinoplus2
+      - ${1}
+
+  :gcov_report:
+    :executable: arm-none-eabi-gcov
+    :arguments:
+      - -n
+      - -p
+      - -b
+      - -o build/gcov/out
+      - ${1}
 
   :test_fixture:
     :executable: python

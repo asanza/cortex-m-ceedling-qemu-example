@@ -7,7 +7,7 @@
         {
             "name": "QEMU Unit Test Debug",
             "type": "cortex-debug",
-            "cwd": "${workspaceFolder}/build/test/out",
+            "cwd": "${workspaceFolder}/build/gcov/out",
             "request": "launch",
             "executable": "${fileBasenameNoExtension}.out",
             "servertype": "qemu",
