@@ -76,6 +76,7 @@
   :reports:
     - HtmlDetailed
   :gcovr:
+    :gcov_executable: arm-none-eabi-gcov
     :html_medium_threshold: 75
     :html_high_threshold: 90
 
