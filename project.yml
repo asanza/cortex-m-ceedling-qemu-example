@@ -148,7 +148,7 @@
       - -mthumb
       - -fprofile-arcs
       - -ftest-coverage
-      - -fprofile-info-section
+      # - -fprofile-info-section
       - -ffunction-sections
       - -fno-strict-aliasing
       - -fdata-sections
@@ -170,7 +170,7 @@
       - -mthumb
       - -fprofile-arcs
       - -ftest-coverage
-      - -fprofile-info-section
+      # - -fprofile-info-section
       - -Wl,--gc-sections
       - -Wl,--warn-common
       - -Wl,--check-sections
