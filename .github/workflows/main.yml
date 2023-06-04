@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: setup environment
-        run: sudo apt -y install qemu-system-arm ruby3.0 && sudo gem install ceedling
+        run: sudo apt -y install gcc-arm-none-eabi qemu-system-arm ruby3.0 && sudo gem install ceedling
 
       - uses: actions/checkout@v1
         with:
