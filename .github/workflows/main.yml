@@ -8,5 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: setup environment
-        run: sudo apt -y install qemu-system-arm ruby-3.0 && gem install ceedling
-    
+        run: sudo apt -y install qemu-system-arm ruby3.0 && sudo gem install ceedling
+
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: run unit tests
+        run: ceedling test:all
+
+      - name: run coverage
+        run: ceedling gcov:all utils:gcov
