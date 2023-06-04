@@ -8,5 +8,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: setup environment
-        run: apt -y install qemu-system-arm ruby-3.0 && gem install ceedling
+        run: sudo apt -y install qemu-system-arm ruby-3.0 && gem install ceedling
     
