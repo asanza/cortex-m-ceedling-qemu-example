@@ -1,0 +1,12 @@
+on:
+  push:
+    branches:
+      -main
+jobs:
+  test:
+    name: run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup environment
+        run: apt -y install qemu-system-arm ruby-3.0 && gem install ceedling
+    
