@@ -5,5 +5,6 @@ void bad_addr_double_word_write(void) {
 }
 
 void test_imprecise_fault( void ) {
+    TEST_IGNORE_MESSAGE("Comment out this line to check failure hard faults");
     bad_addr_double_word_write();
 }
