@@ -30,11 +30,6 @@
             "machine": "netduinoplus2",
             "cpu": "cortex-m4",
             "internalConsoleOptions": "openOnSessionStart",
-            "preLaunchCommands": [
-                "monitor semihosting enable",
-                "monitor semihosting thumbswi 0xab",
-                "monitor semihosting IOClient 2",        
-            ]
         }
     ]
 }
