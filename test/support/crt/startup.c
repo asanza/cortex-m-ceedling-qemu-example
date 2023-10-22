@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unity.h>
-#include <gcov.h>
-#include <string.h>
 
 #define WEAK     __attribute__((weak))
 #define ALIAS(f) __attribute__((weak, alias(#f)))
@@ -19,6 +17,10 @@
 #define VTOR  0xE000ED08
 #define CCR   0xE000ED14
 #define HFSR  0xE000ED2C
+
+#define SYST_CSR     (0xE000E010)  // SysTick Control and Status Register
+#define SYST_RVR     (0xE000E014)  // SysTick Reload Value Register
+#define SYST_CVR     (0xE000E018)  // SysTick Current Value Register
 
 #define REGADDR(x) ((unsigned int *)x)
 #define BIT_SET(x, bit) ((x) & (1 << (bit)))
@@ -44,8 +46,11 @@ fault_handler_c(unsigned int *stack);
 extern void
 initialise_monitor_handles(void);
 
+static uint32_t g_systick_interrupt_count;
+
 __attribute__((naked)) void HardFault_Handler(void);
 void Default_Handler( void );
+void SysTick_Handler( void );
 
 void
 NMI_Handler(void) ALIAS(Default_Handler);
@@ -63,18 +68,11 @@ void
 DebugMon_Handler(void) ALIAS(Default_Handler);
 void
 PendSV_Handler(void) ALIAS(Default_Handler);
-void
-SysTick_Handler(void) ALIAS(Default_Handler);
 
 void
 reset_handler(void);
 void
 main(void);
-
-#if GCOV_ENABLED
-static void
-dump_gcov_info (void);
-#endif
 
 __attribute__((
     used, section(".isr_vector"))) void (*const g_interrupt_vector[])(void) = {
@@ -96,8 +94,7 @@ __attribute__((
     SysTick_Handler,
 };
 
-void
-reset_handler(void)
+void reset_handler(void)
 {
     asm volatile("cpsid i");
 
@@ -123,15 +120,18 @@ reset_handler(void)
     while (it < &__bss_end__) {
         *it++ = 0;
     }
-    
+
+#ifndef QEMU_DISABLE_SYS_TICK_INTERRUPT
+    *REGADDR(SYST_CSR) = 0x00000007UL;
+    *REGADDR(SYST_RVR) = 0x00FFFFFFUL;
+    *REGADDR(SYST_CVR) = 0;
+#endif
+
     initialise_monitor_handles();
 
     asm volatile("cpsie i");
 
     main();
-#ifdef GCOV_ENABLED
-    dump_gcov_info();
-#endif
     exit(0);
 }
 
@@ -256,6 +256,7 @@ fault_handler_c(unsigned int *stack)
     decode_hfsr();
     printf("\n================================================\n");
     UNITY_TEST_FAIL(0, "Hard Fault Handler Called. Check output for details.");
+    exit(0);
 }
 
 __attribute__((naked)) void
@@ -271,8 +272,9 @@ HardFault_Handler(void)
                  "is_psp:                  \n"
                  "mrs r0, psp              \n"
                  "fault_handler:           \n"
-                 "b fault_handler_c        \n");
-#elif defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_8M__) || defined(__ARM_ARCH_7EM__)
+                 "ldr r2,=fault_handler_c  \n"
+                 "bx r2                    \n");
+#elif defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_8M__)
     asm volatile("tst lr, #4 \n"
                  "ite eq \n"
                  "mrseq r0, msp \n"
@@ -312,68 +314,17 @@ Default_Handler(void)
     volatile __unused uint32_t vector = *REGADDR(ICSR) & 0xFFU;
     sprintf(buf, "Default Handler called for vector: %d (%s)", vector, vector_name(vector));
     UNITY_TEST_FAIL(0, buf);
+    exit(0);
+}
+
+void
+SysTick_Handler( void ) {
+    g_systick_interrupt_count++;
 }
 
 uint32_t get_systick( void ) {
-    return 0;
+    uint32_t ticks = (0x00FFFFFFUL - *REGADDR(SYST_CVR)) | (g_systick_interrupt_count << 8);
+    return ticks;
 }
 
-
-#ifdef GCOV_ENABLED
-
-/* The start and end symbols are provided by the linker script.  We use the
-   array notation to avoid issues with a potential small-data area.  */
-
-extern const struct gcov_info *const __gcov_info_start[];
-extern const struct gcov_info *const __gcov_info_end[];
-
-static void
-filename(const char *f, void *arg)
-{
-    printf("{\"filename\": \"%s\", \"data\": [ ", f);
-}
-
-static void
-dump(const void *d, unsigned n, void *arg)
-{
-    const unsigned char *c;
-    unsigned i;
-
-    c = d;
-
-    for (i = 0; i < n; ++i) {
-        printf("%d,", c[i]);
-    }
-}
-
-/* The __gcov_info_to_gcda() function may have to allocate memory under
-   certain conditions.  Simply try it out if it is needed for your application
-   or not.  */
-
-static void *
-allocate (unsigned length, void *arg)
-{
-  (void)arg;
-  return malloc (length);
-}
-
-/* Dump the gcov information of all translation units.  */
-
-static void
-dump_gcov_info (void)
-{
-  const struct gcov_info *const *info = __gcov_info_start;
-  const struct gcov_info *const *end = __gcov_info_end;
-
-  /* Obfuscate variable to prevent compiler optimizations.  */
-  __asm__ ("" : "+r" (info));
-
-  while (info != end)
-  {
-    void *arg = NULL;
-    __gcov_info_to_gcda (*info, filename, dump, allocate, arg);
-    printf("255]}\n");
-    ++info;
-  }
-}
-#endif
+__attribute((used, section(".rom_registers"))) uint8_t config[100] = {[0 ... 99] = 0xFF};

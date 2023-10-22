@@ -1,1 +1,1 @@
-python test/support/jlink_test_fixture.py -device R7FA4M1AB -gdbpath arm-none-eabi-gdb build/test/out/test_iirgen.out
+python test/support/jlink_test_fixture.py -device R7FA4M1AB -gdbpath arm-none-eabi-gdb build/test/out/test_bad_address.out

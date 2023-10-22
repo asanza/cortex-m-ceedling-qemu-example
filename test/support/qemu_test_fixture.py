@@ -39,6 +39,7 @@ def runQemu(cpu, machine, executable):
     err = client.stderr.read().decode('ascii', 'ignore')
 
     if err != '':
+        print('--- QEMU Error ---')
         print(err)
         exit(-1)
 
