@@ -35,12 +35,14 @@ def runQemu(cpu, machine, executable):
 
     client = subprocess.Popen(qemu_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    buf = client.stdout.read().decode('ascii', 'ignore')
-    err = client.stderr.read().decode('ascii', 'ignore')
+    (buf, err) = client.communicate()
+    
+    buf = buf.decode('ascii', 'ignore')
+    err = err.decode('ascii', 'ignore')
 
     if err != '':
         print(err)
-        exit(-1)
+        return(client.returncode)
 
     lines = buf.split(os.linesep)
     fail_pc = '??:0'
@@ -70,8 +72,8 @@ def runQemu(cpu, machine, executable):
         print(line)
 
         if re.search(r'^OK', line):
-            return (0)
-    return 0
+            return (client.returncode)
+    return client.returncode
 
 
 if __name__ == "__main__":
