@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <unity.h>
 #include <gcov.h>
 #include <string.h>
 
@@ -255,7 +254,7 @@ fault_handler_c(unsigned int *stack)
     decode_mmfsr(*mmfsr);
     decode_hfsr();
     printf("\n================================================\n");
-    UNITY_TEST_FAIL(0, "Hard Fault Handler Called. Check output for details.");
+    exit(-1);
 }
 
 __attribute__((naked)) void
@@ -304,14 +303,13 @@ static const char* vector_name( uint32_t vector ) {
 void
 Default_Handler(void)
 {
-    char buf[100];
     /*
      * If we are here, chances are that we triggered an unhandled exception
      * handler. Read the active interrupt number bellow.
      */
     volatile __unused uint32_t vector = *REGADDR(ICSR) & 0xFFU;
-    sprintf(buf, "Default Handler called for vector: %d (%s)", vector, vector_name(vector));
-    UNITY_TEST_FAIL(0, buf);
+    printf("Default Handler called for vector: %d (%s)", vector, vector_name(vector));
+    exit(-1);
 }
 
 #ifdef GCOV_ENABLED

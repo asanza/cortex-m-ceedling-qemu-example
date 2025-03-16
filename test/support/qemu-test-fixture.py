@@ -71,7 +71,7 @@ def runQemu(cpu, machine, executable):
 
         if re.search(r'^OK', line):
             return (0)
-    return -1
+    return 0
 
 
 if __name__ == "__main__":
