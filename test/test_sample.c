@@ -28,7 +28,7 @@ void test_sample_FailOnHardFault(void)
      */
     TEST_IGNORE_MESSAGE("Comment out this line to check failure hard faults");
     int (*bad_instruction)(void) = (void *)0xE0000000;
-    return bad_instruction();
+    bad_instruction();
 }
 
 #endif // TEST
