@@ -56,7 +56,7 @@ SECTIONS
         PROVIDE (__gcov_info_start = .);
         KEEP (*(.gcov_info))
         PROVIDE (__gcov_info_end = .);
-    }
+    } > FLASH
 
     .ARM.extab :
     {
