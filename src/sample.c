@@ -1,12 +1,9 @@
 #include "sample.h"
 
 int sum(int a, int b) {
+    int c;
     for (int i = 0; i < 100; i++) {
-        a += i;
+        c += i;
     }
-    if( b > 2 )
-        return a + b;
-    else
-        return a - b;
     return a + b;
 }

@@ -10,6 +10,8 @@
 #include <gcov.h>
 #include <string.h>
 
+#define GCOV_ENABLED (1)
+
 #define WEAK     __attribute__((weak))
 #define ALIAS(f) __attribute__((weak, alias(#f)))
 
@@ -244,7 +246,7 @@ fault_handler_c(unsigned int *stack)
     printf("LR   : 0x%08X\n", stack[5]);
     printf("PC   : 0x%08X\n", stack[6]);
     printf("XPSR : 0x%08X\n", stack[7]);
-    printf("CFSR : 0x%08X\n", *cfsr);
+    printf("CFSR : 0x%08lX\n", *cfsr);
     if (*bfsr & (1 << 7)) {
         printf("BFAR : 0x%08X\n", *bfar);
     }
@@ -308,7 +310,7 @@ Default_Handler(void)
      * handler. Read the active interrupt number bellow.
      */
     volatile __unused uint32_t vector = *REGADDR(ICSR) & 0xFFU;
-    printf("Default Handler called for vector: %d (%s)", vector, vector_name(vector));
+    printf("Default Handler called for vector: %ld (%s)", vector, vector_name(vector));
     exit(-1);
 }
 
@@ -320,22 +322,29 @@ Default_Handler(void)
 extern const struct gcov_info *const __gcov_info_start[];
 extern const struct gcov_info *const __gcov_info_end[];
 
+struct info {
+    FILE* file;
+};
+
 static void
 filename(const char *f, void *arg)
 {
-    printf("{\"filename\": \"%s\", \"data\": [ ", f);
+    struct info *i = (struct info*) arg;
+    i->file = fopen(f, "wb");
 }
 
 static void
 dump(const void *d, unsigned n, void *arg)
 {
+    struct info *info = (struct info*) arg;
+
     const unsigned char *c;
     unsigned i;
 
     c = d;
 
     for (i = 0; i < n; ++i) {
-        printf("%d,", c[i]);
+        fputc(c[i], info->file);
     }
 }
 
@@ -361,12 +370,13 @@ dump_gcov_info (void)
   /* Obfuscate variable to prevent compiler optimizations.  */
   __asm__ ("" : "+r" (info));
 
+  
   while (info != end)
   {
-    void *arg = NULL;
-    __gcov_info_to_gcda (*info, filename, dump, allocate, arg);
-    printf("255]}\n");
+    struct info arg;
+    __gcov_info_to_gcda (*info, filename, dump, allocate, &arg);
     ++info;
+    fclose(arg.file);
   }
 }
 #endif

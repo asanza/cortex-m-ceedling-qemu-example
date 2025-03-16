@@ -356,7 +356,7 @@
       - -mcpu=cortex-m23
       - -Wall
       - -fomit-frame-pointer
-      - -Os
+      - -O0
       - -gdwarf-3
       - -ggdb
       - -c
@@ -376,6 +376,7 @@
     :executable: arm-none-eabi-gcc
     :arguments:
       - -mcpu=cortex-m23
+      - -O0
       - -gdwarf-3
       - -ggdb
       - -Wl,--gc-sections
@@ -400,7 +401,7 @@
       - -mcpu=cortex-m23
       - -Wall
       - -fomit-frame-pointer
-      - -Os
+      - -O0
       - -gdwarf-3
       - -ggdb
       - -c
@@ -423,6 +424,7 @@
     :executable: arm-none-eabi-gcc
     :arguments:
       - -mcpu=cortex-m23
+      - -O0
       - -gdwarf-3
       - -ggdb
       - -mthumb
@@ -439,7 +441,6 @@
       - -mlong-calls
       - -save-temps
       - -T test/support/crt/linker_script.ld
-      - -DGCOV_ENABLED
       - --specs=rdimon.specs
       - -lrdimon
       - -lc
